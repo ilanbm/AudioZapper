@@ -1,0 +1,12 @@
+{
+    "manifest_version": 2,
+
+    "name": "Humans Can't Focus On More Than One Audio Channel Dah!",
+    "version": "1.0.0",
+    "description": "",
+    "background": {
+        "persisten": false,
+        "scripts": ["background.js"]
+    }
+}
+

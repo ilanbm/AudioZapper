@@ -1,9 +1,9 @@
 {
     "manifest_version": 2,
 
-    "name": "Humans Can't Focus On More Than One Audio Channel Dah!",
+    "name": "AudioZapper - What You See Is What You Hear",
     "version": "1.0.0",
-    "description": "",
+    "description": "Listen only to the audio of the currently focused tab, muting all others. To keep the audio on the background: pin tab or open a seperate window",
     "background": {
         "persisten": false,
         "scripts": ["background.js"]

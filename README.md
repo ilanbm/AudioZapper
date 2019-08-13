@@ -1,4 +1,4 @@
-# AudioZap
+# AudioZapper
 Previously called for a short time with the self-explanatory name:
 # HumansCantFocusOnMoreThanOneAudioChannelDah
 

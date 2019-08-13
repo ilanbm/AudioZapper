@@ -3,7 +3,7 @@
 
     "name": "AudioZapper - What You See Is What You Hear",
     "version": "1.0.0",
-    "description": "Listen only to the audio of the currently focused tab, muting all others. To keep the audio on the background: pin tab or open a seperate window",
+    "description": "Listen to audio on focused tab only, muting all others. To keep the audio on the background: pin tab or open a separate window",
     "background": {
         "persisten": false,
         "scripts": ["background.js"]

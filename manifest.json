@@ -1,12 +1,17 @@
 {
     "manifest_version": 2,
-
+    "browser_action": {
+        "default_icon": "icon/frame_08_delay-0.03s.png"
+      },
     "name": "AudioZapper - What You See Is What You Hear",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "description": "Listen to audio on focused tab only, muting all others. To keep the audio on the background: pin tab or open a separate window",
     "background": {
         "persisten": false,
         "scripts": ["background.js"]
-    }
+    },
+    "permissions": [
+        "tabs"
+    ]
 }
 

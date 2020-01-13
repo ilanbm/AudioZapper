@@ -55,6 +55,9 @@ chrome.tabs.onUpdated.addListener( (tabId,changeInfo,tab) => {
 })
 chrome.tabs.onRemoved.addListener( (tabId,{windowId}) => updateWindowCount(windowId) )
 chrome.tabs.onCreated.addListener( tab => updateTabBadge(tab.id,tab.windowId))
+chrome.tabs.onDetached.addListener( (tabId,{oldWindowId}) => updateWindowCount(oldWindowId))
+chrome.tabs.onAttached.addListener( (tabId,{newWindowId}) => updateWindowCount(newWindowId))
+
 chrome.tabs.onActivated.addListener(({tabId, windowId}) => {
 		currentTab[windowId] = tabId
 		chrome.tabs.get(tabId, tab => tab.audible && zapTab({tabId,windowId}))

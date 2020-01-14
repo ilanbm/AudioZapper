@@ -1,7 +1,7 @@
 
 audibleCount = {} // windowId: count
 currentTab = {} // windowId : tabId
-playingTab = {} // windowId : playTabId
+returnTab = {} // windowId : tab
 
 const animateIcon = windowId => {
 	const min = 0, max = 38;
@@ -38,8 +38,10 @@ const updateWindowCount = windowId =>
 				updateTabBadge(currentTab[windowId],windowId)
 		})
 
-const zapTab = ({tabId, windowId}) => {
-	playingTab[windowId] = tabId
+/////////////////////////
+
+const playTabExclusively = ({tabId, windowId}) => {
+	chrome.tabs.get(tabId, tab => returnTab[windowId] = tab)
 	chrome.tabs.query({windowId, audible: true, pinned: false}, 
 		audibleTabs => (
 			audibleTabs.forEach( 
@@ -49,32 +51,42 @@ const zapTab = ({tabId, windowId}) => {
 	)
 }
 
-chrome.tabs.onUpdated.addListener( (tabId,changeInfo,tab) => {
-	(changeInfo.status === 'loading' || changeInfo.audible !== undefined) && updateWindowCount(tab.windowId);
-	(changeInfo.audible == true) && tab.active && zapTab({tabId, windowId: tab.windowId});
+const nextAudible = (tabs, {windowId,index}) => [...tabs,...tabs].splice(index + 1,tabs.length).filter(tab => tab.audible)[0] || tabs[index]
+const activateNextAudbile = tab => chrome.tabs.query({windowId: tab.windowId}, 
+	tabs => chrome.tabs.update(nextAudible(tabs, tab).id,{active: true}))
+const setReturnTabToNextAudible = windowId => chrome.tabs.query({windowId}, 
+	tabs => returnTab[windowId] = nextAudible(tabs,returnTab[windowId]))
+
+chrome.tabs.onUpdated.addListener( (tabId,changeInfo,{windowId,active}) => {
+	changeInfo.status === 'loading' && updateWindowCount(windowId)
+	if(changeInfo.audible !== undefined) {
+		updateWindowCount(windowId)
+		active && changeInfo.audible && playTabExclusively({tabId, windowId})
+		!changeInfo.audible && returnTab[windowId] && tabId === returnTab[windowId].id && 
+			setReturnTabToNextAudible(windowId);
+	}
 })
-chrome.tabs.onRemoved.addListener( (tabId,{windowId}) => updateWindowCount(windowId) )
+
+const onRemovedTab = (tabId,{windowId, oldWindowId}) => {
+	windowId = windowId || oldWindowId
+	updateWindowCount(windowId)
+	returnTab[windowId] && returnTab[windowId].id === tabId && (returnTab[windowId]=undefined)
+} 
+chrome.tabs.onRemoved.addListener(onRemovedTab)
+chrome.tabs.onDetached.addListener(onRemovedTab)
 chrome.tabs.onCreated.addListener( tab => updateTabBadge(tab.id,tab.windowId))
-chrome.tabs.onDetached.addListener( (tabId,{oldWindowId}) => updateWindowCount(oldWindowId))
 chrome.tabs.onAttached.addListener( (tabId,{newWindowId}) => updateWindowCount(newWindowId))
 
 chrome.tabs.onActivated.addListener(({tabId, windowId}) => {
 		currentTab[windowId] = tabId
-		chrome.tabs.get(tabId, tab => tab.audible && zapTab({tabId,windowId}))
+		chrome.tabs.get(tabId, tab => tab.audible && playTabExclusively({tabId,windowId}))
 		updateTabBadge(tabId,windowId)
 })
 
-
-
 chrome.browserAction.onClicked.addListener(
-	activeTab => (playingTab[activeTab.windowId] && activeTab.id !== playingTab[activeTab.windowId]) ? 
-		chrome.tabs.update(playingTab[activeTab.windowId], {active: true}) : 
-		chrome.tabs.query({windowId:activeTab.windowId},
-			tabs=>
-				chrome.tabs.update(([...tabs.splice(activeTab.index + 1),...tabs.splice(0,activeTab.index + 1)].filter(	
-					tab => tab.audible)[0] || activeTab).id,{active: true}
-				)
-		)
+	tab => (tab.audible || !returnTab[tab.windowId]) ? 
+		activateNextAudbile(tab) : 
+		chrome.tabs.update(returnTab[tab.windowId].id, {active: true})
 )
 
 // on extension load: 
